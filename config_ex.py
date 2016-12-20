@@ -6,7 +6,7 @@ CONSUMER_KEY = ""
 CONSUMER_SECRET = ""
 
 # SQLITE database
-DATABASE_NAME = ""
+DATABASE_NAME = "example"
 
 # String used by dataset to create/open sqlite db
 CONNECTION_STRING = "sqlite:///data/{}.sqlite".format(DATABASE_NAME)

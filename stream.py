@@ -10,7 +10,7 @@ auth.set_access_token(config.ACCESS_TOKEN, config.ACCESS_TOKEN_SECRET)
 api = tweepy.API(auth)
 
 # Update with topics to follow
-TOPICS = ["notmypresident", "theresistance"]
+TOPICS = ["baseball", "football"]
 
 
 class StreamListener(tweepy.StreamListener):
@@ -45,7 +45,7 @@ class StreamListener(tweepy.StreamListener):
                 hashtags.append(tag['text'])
             hashtags = json.dumps(hashtags)
 
-        table = db["tweets"]
+        table = db[config.TABLE_NAME]
         table.insert(dict(
             user_description=description,
             user_location=loc,
