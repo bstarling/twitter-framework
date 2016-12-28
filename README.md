@@ -1,6 +1,6 @@
 # twitter-framework
 
-#### Quick script for streaming tweets to sqlite database
+#### Example script to stream tweets to sqlite database
 
 ### Instructions
 * Create environment and install dependencies using `requirements.txt` (pip) or `environment.yml` (conda)
@@ -12,4 +12,6 @@
 * Stream should continue to run unless you receive a 420 (rate limit error) from twitter API
 * Data for chosen fields will be streamed to sqlite db in `data` folder
 
-I have chosen specific fields to save but any field defined in the twitter/tweepy API can be added to stream. The combination of sqlite & `dataset` lets you easily configure new fields.
+I have chosen specific fields to store but any field defined in the twitter/tweepy API can be added to stream. The combination of sqlite & `dataset` lets you easily configure new fields.
+
+Thanks to [tweepy](https://github.com/tweepy/tweepy) and [dataset](https://github.com/pudo/dataset) for making this a breeze.
