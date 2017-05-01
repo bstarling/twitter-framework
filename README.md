@@ -1,17 +1,36 @@
-# twitter-framework
+# Twitter streaming framework
 
-#### Example script to stream tweets to sqlite database
+This is a small python script plus CLI which can be used to stream tweets to sqlite or mongo database.
 
-### Instructions
-* Create environment and install dependencies using `requirements.txt` (pip) or `environment.yml` (conda)
-* Change name of config_ex.py to config.py (actual config file should be excluded from git)
-* Update constants in config file with twitter API tokens and keys.
-* Update database name & table constants if desired
-* Update `TOPICS` constant in `stream.py` with topics you would like to stream ex `TOPICS = ["baseball", "football"]`
-* Run `python stream.py` from command line.
-* Stream should continue to run unless you receive a 420 (rate limit error) from twitter API
-* Data for chosen fields will be streamed to sqlite db in `data` folder
+### CLI
+Called from command line via `stream.py`
+* `-D --db` : Connection URI used by sqlite or mongo driver. For more information check dataset docs (sqlite back end) [here](http://dataset.readthedocs.io/en/latest/quickstart.html) or mongodb documentation [here](http://api.mongodb.com/python/current/tutorial.html)
+* `-N` `--name` : Name of the table/collection to store tweets. Defaults to `tweet`
+* `-T` `--topics` : List of topics to follow.
+* `-V` `--verbose`: Prints tweet text to screen/logs
 
-I have chosen specific fields to store but any field defined in the twitter/tweepy API can be added to stream. The combination of sqlite & `dataset` lets you easily configure new fields.
+### Example usage:
+`python stream.py --topics summer, winter --verbose` will start a collector following the topics `winter, summer` by default data is saved in a sqlite db named `twitter.db` in the current working directory.
 
-Thanks to [tweepy](https://github.com/tweepy/tweepy) and [dataset](https://github.com/pudo/dataset) for making this a breeze.
+
+`python stream.py --name new --D mongodb://localhost:27017/ -N python_tweets -T python -V` to start a collector using mongodb back end. By default tweets are saved to twitter db / tweet collection.
+
+### Requirements
+* Written using Python 3.6.1, I have not tested with any other versions.
+* Run `pip install -r requirements.txt` to install required packages.
+
+### API Credentials
+By default the script will pull twitter API credentials from these environment variables `T_CONSUMER_KEY, T_CONSUMER_SECRET, T_ACCESS_KEY, T_ACCESS_SECRET`. You can set environment variables by running the below commands or adding to your `bash_profile`
+
+```bash
+ export T_CONSUMER_KEY='your-key'
+ export T_CONSUMER_SECRET='your-secret'
+
+ export T_ACCESS_KEY='access-key'
+ export T_ACCESS_SECRET='access-secret'
+ ```
+
+If you prefer, you can manually set credentials in the `credentials.py` file
+
+### License
+MIT
