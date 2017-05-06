@@ -13,7 +13,7 @@ Called from command line via `stream.py`
 `python stream.py --topics summer, winter --verbose` will start a collector following the topics `winter, summer` by default data is saved in a sqlite db named `twitter.db` in the current working directory.
 
 
-`python stream.py --name new --D mongodb://localhost:27017/ -N python_tweets -T python -V` to start a collector using mongodb back end. By default tweets are saved to twitter db / tweet collection.
+`python stream.py --name new -D mongodb://localhost:27017/ -N macrongate -T spring, fall --verbose` to start a collector using mongodb back end. By default tweets are saved to twitter db / tweet collection.
 
 ### Requirements
 * Written using Python 3.6.1, I have not tested with any other versions.
