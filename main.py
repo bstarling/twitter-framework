@@ -1,9 +1,10 @@
 import dataset
-from datetime import datetime
+import datetime
 import json
-import os
 import sys
 import tweepy
+
+from urllib3.exceptions import ProtocolError
 from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError
 
@@ -15,10 +16,11 @@ def create_datetime(timestamp):
     """Helper function create datetime for mongo load"""
 
     try:
-        timestamp = datetime.strptime(timestamp, '%a %b %d %H:%M:%S %z %Y')
+        timestamp = datetime.datetime.strptime(timestamp, '%a %b %d %H:%M:%S %z %Y')
     except Exception as e:
-        l.warn('Could not convert created_at {}\n{}'.format(timestamp, e))
+        # l.warn('Could not convert created_at {}\n{}'.format(timestamp, e))
         return None
+    return timestamp
 
 
 def mongo_preprocessor(status):
@@ -75,10 +77,10 @@ class StreamListener(tweepy.StreamListener):
     def __init__(self, api=None, connection_string=None, table='tweet', verbose=False):
         super(StreamListener, self).__init__()
         self.counter = 0
-        self.batch_size = 10
+        self.batch_size = 100
         self.verbose = verbose
         self.tweet_list = []
-        self.start = datetime.utcnow()
+        self.start = datetime.datetime.utcnow()
         self.setup_backend(connection_string, table)
 
     def setup_backend(self, db, table):
@@ -101,11 +103,11 @@ class StreamListener(tweepy.StreamListener):
     def on_status(self, status):
         self.counter += 1
         if self.verbose:
-            l.info(status.text)
+            l.info("{}||{}".format(status.id, status.text))
         self.tweet_list.append(status)
 
         if self.counter >= self.batch_size:
-            td = datetime.utcnow() - self.start
+            td = datetime.datetime.utcnow() - self.start
             l.info("Batch time elapsed: {}".format(td))
             self.save_tweets()
             self.reset()
@@ -114,7 +116,7 @@ class StreamListener(tweepy.StreamListener):
         # reset batch counter
         self.counter = 0
         self.tweet_list = []
-        self.start = datetime.utcnow()
+        self.start = datetime.datetime.utcnow()
 
     def on_error(self, status_code):
         l.warn('Error {}'.format(status_code))
@@ -151,8 +153,8 @@ class StreamListener(tweepy.StreamListener):
 
 
 def run(**kwargs):
-    l.info("Twitter API Keys\nCONSUMER_KEY:{}\nCONSUMER_SECRET:{}\nACCESS_KEY:{}\nACCESS_SECRET:{}\n".format(
-        CONSUMER_KEY, CONSUMER_SECRET, ACCESS_KEY, ACCESS_SECRET))
+    # l.info("Twitter API Keys\nCONSUMER_KEY:{}\nCONSUMER_SECRET:{}\nACCESS_KEY:{}\nACCESS_SECRET:{}".format(
+    #     CONSUMER_KEY, CONSUMER_SECRET, ACCESS_KEY, ACCESS_SECRET))
 
     auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
     auth.set_access_token(ACCESS_KEY, ACCESS_SECRET)
@@ -161,4 +163,12 @@ def run(**kwargs):
     stream_listener = StreamListener(
         connection_string=kwargs['db'], table=kwargs['name'], verbose=kwargs['verbose'])
     stream = tweepy.Stream(auth=api.auth, listener=stream_listener)
-    stream.filter(track=kwargs['topics'])
+    while True:
+        try:
+            stream.filter(track=kwargs['topics'])
+        except ProtocolError as e:
+            # Network error or stream failing behind
+            # https://github.com/tweepy/tweepy/issues/448
+            # prevent stream from crashing & attempt to recover
+            l.info(e)
+            continue
