@@ -15,6 +15,7 @@ Called from command line via `stream.py`
 
 `python stream.py --name new -D mongodb://localhost:27017/ -N twitter -T spring, fall --verbose` to start a collector using mongodb back end. By default tweets are saved to twitter db / tweet collection.
 
+
 ### Requirements
 * Written using Python 3.6.1, I have not tested with any other versions.
 * Run `pip install -r requirements.txt` to install required packages.
