@@ -16,18 +16,19 @@ def create_datetime(timestamp):
     """Helper function create datetime for mongo load"""
 
     try:
-        timestamp = datetime.datetime.strptime(timestamp, '%a %b %d %H:%M:%S %z %Y')
+        timestamp = datetime.datetime.strptime(timestamp, "%a %b %d %H:%M:%S %z %Y")
     except Exception as e:
         # l.warn('Could not convert created_at {}\n{}'.format(timestamp, e))
         return None
+
     return timestamp
 
 
 def mongo_preprocessor(status):
     """Get tweet in JSON format"""
 
-    tweet = status.__dict__['_json']
-    tweet['created_at'] = create_datetime(tweet['created_at'])
+    tweet = status.__dict__["_json"]
+    tweet["created_at"] = create_datetime(tweet["created_at"])
     return tweet
 
 
@@ -35,20 +36,20 @@ def sqlite_preprocessor(status):
     """Map tweet to db fields"""
 
     # Check if retweet
-    if hasattr(status, 'retweeted_status'):
-        retweet = 'Y'
+    if hasattr(status, "retweeted_status"):
+        retweet = "Y"
         original_id = status.retweeted_status.user.id
         original_name = status.retweeted_status.user.name
     else:
-        retweet = 'N'
+        retweet = "N"
         original_id = None
         original_name = None
 
     # check for hashtags and save as list
-    if hasattr(status, 'entities'):
+    if hasattr(status, "entities"):
         hashtags = []
-        for tag in status.entities['hashtags']:
-            hashtags.append(tag['text'])
+        for tag in status.entities["hashtags"]:
+            hashtags.append(tag["text"])
         hashtags = json.dumps(hashtags)
 
     tweet = dict(
@@ -64,17 +65,17 @@ def sqlite_preprocessor(status):
         friends_count=status.user.friends_count,
         source=status.source,
         retweet=retweet,
-
         # do not exist for every tweet
         original_id=None if original_id is None else original_id,
         original_name=None if original_name is None else original_name,
         hashtags=None if hashtags is None else hashtags,
-        )
+    )
     return tweet
 
 
 class StreamListener(tweepy.StreamListener):
-    def __init__(self, api=None, connection_string=None, table='tweet', verbose=False):
+
+    def __init__(self, api=None, connection_string=None, table="tweet", verbose=False):
         super(StreamListener, self).__init__()
         self.counter = 0
         self.batch_size = 100
@@ -85,19 +86,23 @@ class StreamListener(tweepy.StreamListener):
 
     def setup_backend(self, db, table):
         db_type = db.split(":")[0]
-        if db_type == 'mongodb':
+        if db_type == "mongodb":
             self.client = MongoClient(db)
             self.db = self.client.twitter
             self.table = self.db[table]
             self.backend = db_type
-        elif db_type == 'sqlite':
+        elif db_type == "sqlite":
             self.db = dataset.connect(db)
             self.table = self.db[table]
             self.backend = db_type
 
         else:
             # unable to parse connection string
-            l.warning("{} is no a not supported back end\nConnection string: {}".format(db_type, db))
+            l.warning(
+                "{} is no a not supported back end\nConnection string: {}".format(
+                    db_type, db
+                )
+            )
             sys.exit(1)
 
     def on_status(self, status):
@@ -119,11 +124,11 @@ class StreamListener(tweepy.StreamListener):
         self.start = datetime.datetime.utcnow()
 
     def on_error(self, status_code):
-        l.warn('Error {}'.format(status_code))
+        l.warn("Error {}".format(status_code))
 
     def save_tweets(self):
         bulk_insert = []
-        if self.backend == 'mongodb':
+        if self.backend == "mongodb":
             for tweet in self.tweet_list:
                 tweet = mongo_preprocessor(tweet)
                 bulk_insert.append(tweet)
@@ -135,7 +140,7 @@ class StreamListener(tweepy.StreamListener):
             except Exception as e:
                 l.warn("Unable to save to DB\n{}".format(e))
 
-        elif self.backend == 'sqlite':
+        elif self.backend == "sqlite":
             bulk_insert = []
             for tweet in self.tweet_list:
                 try:
@@ -143,6 +148,7 @@ class StreamListener(tweepy.StreamListener):
                 except Exception as e:
                     l.warn("unable to map {}".format(tweet))
                     continue
+
                 bulk_insert.append(tweet)
             try:
                 self.table.insert_many(bulk_insert)
@@ -161,11 +167,12 @@ def run(**kwargs):
     api = tweepy.API(auth)
 
     stream_listener = StreamListener(
-        connection_string=kwargs['db'], table=kwargs['name'], verbose=kwargs['verbose'])
+        connection_string=kwargs["db"], table=kwargs["name"], verbose=kwargs["verbose"]
+    )
     stream = tweepy.Stream(auth=api.auth, listener=stream_listener)
     while True:
         try:
-            stream.filter(track=kwargs['topics'])
+            stream.filter(track=kwargs["topics"])
         except ProtocolError as e:
             # Network error or stream failing behind
             # https://github.com/tweepy/tweepy/issues/448
