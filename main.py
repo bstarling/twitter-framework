@@ -18,7 +18,7 @@ def create_datetime(timestamp):
     try:
         timestamp = datetime.datetime.strptime(timestamp, "%a %b %d %H:%M:%S %z %Y")
     except Exception as e:
-        # l.warn('Could not convert created_at {}\n{}'.format(timestamp, e))
+        l.warn("Could not convert created_at {}\n{}".format(timestamp, e))
         return None
 
     return timestamp
@@ -159,9 +159,6 @@ class StreamListener(tweepy.StreamListener):
 
 
 def run(**kwargs):
-    # l.info("Twitter API Keys\nCONSUMER_KEY:{}\nCONSUMER_SECRET:{}\nACCESS_KEY:{}\nACCESS_SECRET:{}".format(
-    #     CONSUMER_KEY, CONSUMER_SECRET, ACCESS_KEY, ACCESS_SECRET))
-
     auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
     auth.set_access_token(ACCESS_KEY, ACCESS_SECRET)
     api = tweepy.API(auth)
